@@ -123,15 +123,15 @@ class lammps(object):
     if not self.lib:
       try:
         if not name:
-          self.lib = CDLL(join(modpath,"liblammps" + lib_ext),RTLD_GLOBAL)
+          self.lib = CDLL(join(modpath,"liblammps" + lib_ext),RTLD_GLOBAL | os.RTLD_DEEPBIND)
         else:
           self.lib = CDLL(join(modpath,"liblammps_%s" % name + lib_ext),
-                          RTLD_GLOBAL)
+                          RTLD_GLOBAL | os.RTLD_DEEPBIND)
       except:
         if not name:
-          self.lib = CDLL("liblammps" + lib_ext,RTLD_GLOBAL)
+          self.lib = CDLL("liblammps" + lib_ext,RTLD_GLOBAL | os.RTLD_DEEPBIND)
         else:
-          self.lib = CDLL("liblammps_%s" % name + lib_ext,RTLD_GLOBAL)
+          self.lib = CDLL("liblammps_%s" % name + lib_ext,RTLD_GLOBAL | os.RTLD_DEEPBIND)
 
 
     # declare all argument and return types for all library methods here.
@@ -289,12 +289,13 @@ class lammps(object):
     # detect if Python is using version of mpi4py that can pass a communicator
 
     self.has_mpi4py = False
-    try:
-      from mpi4py import __version__ as mpi4py_version
-      # tested to work with mpi4py versions 2 and 3
-      self.has_mpi4py = mpi4py_version.split('.')[0] in ['2','3']
-    except:
-      pass
+    if self.has_mpi_support:
+        try:
+          from mpi4py import __version__ as mpi4py_version
+          # tested to work with mpi4py versions 2 and 3
+          self.has_mpi4py = mpi4py_version.split('.')[0] in ['2','3']
+        except:
+          pass
 
     # if no ptr provided, create an instance of LAMMPS
     #   don't know how to pass an MPI communicator from PyPar
